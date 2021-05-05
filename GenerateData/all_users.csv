@@ -1,0 +1,7 @@
+id ,name      ,password  ,role
+1  ,sunil     ,1234      ,driver
+2  ,anil      ,abcd      ,driver
+3  ,maheer    ,pqrs      ,driver
+4  ,sayantan  ,lmno      ,police
+5  ,harshad   ,qrst      ,municipality
+6  ,shiv      ,defg      ,admin
