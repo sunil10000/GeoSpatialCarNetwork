@@ -3,9 +3,10 @@ const pool = require('../utils/database');
 exports.get_test = (req,res,next) => {
 
 
-    res.render('admin/login_page', {
-        pageTitle: 'Login',
-        path: '/admin/login_page',
+    res.render('police/police_page', {
+        pageTitle: 'Traffic Police',
+        path: '/police/police_page',
+        // username: req.query.username,
         editing: false
     });
 
@@ -15,8 +16,7 @@ exports.get_test = (req,res,next) => {
 exports.post_test = (req,res,next) => {
     const username = req.body.username;
     const password = req.body.password;
-    const url = require('url');
-
+    
     var thatrow = [];
     pool.query("select password, role from users where username = $1", [username], function(err, row){
         if (err){
@@ -31,7 +31,7 @@ exports.post_test = (req,res,next) => {
         thatrow=value;
         var pwd=thatrow['rows'][0]['password'];
         if (pwd == password){
-            res.redirect("/user")
+            res.redirect(thatrow['rows'][0]['role'])
         }
     }
 };

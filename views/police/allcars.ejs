@@ -1,0 +1,167 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/css/forms.css">
+<link rel="stylesheet" href="/css/product.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+<style>
+    .accordion {
+      background-color: #eee;
+      color: #444;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+      transition: 0.4s;
+    }
+    
+    .active, .accordion:hover {
+      background-color: #ccc; 
+    }
+    
+    .panel {
+      padding: 0 18px;
+      display: none;
+      background-color: white;
+      overflow: hidden;
+    }
+    </style>
+</head>
+
+<body>
+<%- include('../includes/police_navigation.ejs') %>
+
+<main>
+    <h2 id="ah">All city Cars</h2>
+    <div id="map" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content"></div>
+    </div>
+
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for car ID.." title="Type in a name">
+
+
+
+<script>
+function myFunction() {
+    var input, filter, ul, li, a, i, txtValue;
+    input = document.getElementById("myInput");
+    filter = input.value.toUpperCase();
+    ul = document.getElementById("myUL");
+    li = ul.getElementsByTagName("li");
+    for (i = 0; i < li.length; i++) {
+        a = li[i].getElementsByTagName("a")[0];
+        txtValue = a.textContent || a.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            li[i].style.display = "";
+        } else {
+            li[i].style.display = "none";
+        }
+    }
+}
+</script>
+
+    <button class="accordion">Car 1</button>
+<div class="panel">
+  <p><b>Car ID :</b>01<br>
+    <b>Owner ID:</b>21<br>
+    <b>Model:</b> Honda Amaze<br>
+    <b>Running :</b> Yes<br> <b>Location:</b> [72.8777, 19.0760]<br>
+    <b>Speed:</b> 34.5km/hr<br>
+    <b>Fuel: </b>24L(48%)
+</p>
+</div>
+
+<button class="accordion">Car 2</button>
+<div class="panel">
+    <p><b>Car ID :</b>01<br>
+    <b>Model:</b> Honda City<br>
+    <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
+</div>
+
+<button class="accordion">Car 3</button>
+<div class="panel">
+    <p><b>Car ID :</b>01<br>
+        <b>Model:</b> Honda City<br>
+        <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
+</div>
+    <script>
+        var acc = document.getElementsByClassName("accordion");
+        var i;
+        
+        for (i = 0; i < acc.length; i++) {
+          acc[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+              panel.style.display = "none";
+            } else {
+              panel.style.display = "block";
+            }
+          });
+        }
+    </script>
+
+    
+
+   <script type="text/javascript">
+    var map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([72.8777, 19.0760]),
+        zoom: 15
+      })
+    });
+    var layer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+            features: [
+                new ol.Feature({
+                    geometry: new ol.geom.Point(ol.proj.fromLonLat([72.8776, 19.0760]))
+                })
+            ]
+        })
+    });
+    map.addLayer(layer);
+
+    var container = document.getElementById('popup');
+ var content = document.getElementById('popup-content');
+ var closer = document.getElementById('popup-closer');
+
+ var overlay = new ol.Overlay({
+     element: container,
+     autoPan: true,
+     autoPanAnimation: {
+         duration: 250
+     }
+ });
+ map.addOverlay(overlay);
+
+ closer.onclick = function() {
+     overlay.setPosition(undefined);
+     closer.blur();
+     return false;
+ };
+
+ map.on('singleclick', function (event) {
+     if (map.hasFeatureAtPixel(event.pixel) === true) {
+         var coordinate = event.coordinate;
+
+         content.innerHTML = '<b>Car ID :</b> 01<br /><b>Speed: </b>34.5kmph';
+         overlay.setPosition(coordinate);
+     } else {
+         overlay.setPosition(undefined);
+         closer.blur();
+     }
+ });
+  </script>
+
+</main>
+<%- include('../includes/end.ejs') %>
