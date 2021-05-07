@@ -1,8 +1,23 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/css/forms.css">
 <link rel="stylesheet" href="/css/product.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script> -->
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
+   <style>
+       #myMap { height: 360px; }
+   </style>
+
+   
+  
 <style>
     .accordion {
       background-color: #eee;
@@ -35,36 +50,25 @@
 
 <main>
     <h2 id="ah">Where are my cars?</h2>
-    <div id="map" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
-    <div id="popup" class="ol-popup">
-        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-        <div id="popup-content"></div>
-    </div>
+    <div id="myMap" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
 
+    <% var dd = data['rows'] 
+      for(var i=0; i < dd.length; i++) { %>
 
-    <button class="accordion">Car 1</button>
-<div class="panel">
-  <p><b>Car ID :</b>01<br>
-    <b>Model:</b> Honda Amaze<br>
-    <b>Running :</b> Yes<br> <b>Location:</b> [72.8777, 19.0760]<br>
-    <b>Speed:</b> 34.5km/hr<br>
-    <b>Fuel: </b>24L(48%)
-</p>
-</div>
+        <button class="accordion">Car <%=i+1%> </button>
+        <div class="panel">
+          <p>
+            <b>Car ID :</b>   <%=dd[i]['id']%>     <br>
+            <b>Model:</b>     <%=dd[i]['car_name']%>  <br>
+            <b>Running :</b>  <%=dd[i]['running'] %>                <br>
+            <b>Location:</b>  [<%=dd[i]['locx']%>, <%=dd[i]['locy']%>]  <br>
+            <b>Speed:</b>     <%=dd[i]['speed']%>  <br>
+            <b>Fuel: </b>     <%=dd[i]['fuel']%>
+        </p>
+        </div>
 
-<button class="accordion">Car 2</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-    <b>Model:</b> Honda City<br>
-    <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
+        <% } %>
 
-<button class="accordion">Car 3</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-        <b>Model:</b> Honda City<br>
-        <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
     <script>
         var acc = document.getElementsByClassName("accordion");
         var i;
@@ -82,63 +86,58 @@
         }
     </script>
 
-    
 
-   <script type="text/javascript">
-    var map = new ol.Map({
-      target: 'map',
-      layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([72.8777, 19.0760]),
-        zoom: 15
-      })
-    });
-    var layer = new ol.layer.Vector({
-        source: new ol.source.Vector({
-            features: [
-                new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([72.8776, 19.0760]))
+    <script>
+        const mymap = L.map('myMap').setView([0, 0], 18);
+
+        const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
+        const tiles = L.tileLayer(tileUrl, { attribution });
+        tiles.addTo(mymap);
+        
+        // marker for car
+        let marker = L.marker([0, 0]).addTo(mymap);
+        
+        // update function
+        var i = 1;
+
+        async function getNew(){
+          console.log("again this!")
+            fetch("http://localhost:3000/api", {
+                method: 'post', // or 'PUT'
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({"owner": "2"}) // data can be `string` or {object}!
+                
+            }).then(function(res){
+                res.json().then(data => ({
+                  data: data,
+                  status: res.status
+                })).then(res => {
+                  rows = res.data.rows
+                  // console.log(res.status, rows)
+                  row = rows[0]
+                  i = i + 5;
+                  // marker.setLatLng([ (i%180)-90, 44])
+                  marker.setLatLng([parseFloat(row['locy']), parseFloat(row['locx'])])
+                  if(i==1){
+                    mymap.flyTo([row['locy'], row['locx']], 18);
+                  }
+                  i=(i+1)%5
+
                 })
-            ]
-        })
-    });
-    map.addLayer(layer);
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
+        // calling update function
+        getNew();
+        setInterval(getNew, 1000);
 
-    var container = document.getElementById('popup');
- var content = document.getElementById('popup-content');
- var closer = document.getElementById('popup-closer');
-
- var overlay = new ol.Overlay({
-     element: container,
-     autoPan: true,
-     autoPanAnimation: {
-         duration: 250
-     }
- });
- map.addOverlay(overlay);
-
- closer.onclick = function() {
-     overlay.setPosition(undefined);
-     closer.blur();
-     return false;
- };
-
- map.on('singleclick', function (event) {
-     if (map.hasFeatureAtPixel(event.pixel) === true) {
-         var coordinate = event.coordinate;
-
-         content.innerHTML = '<b>Car ID :</b> 01<br /><b>Speed: </b>34.5kmph';
-         overlay.setPosition(coordinate);
-     } else {
-         overlay.setPosition(undefined);
-         closer.blur();
-     }
- });
-  </script>
-
+    </script>
 </main>
 <%- include('../includes/end.ejs') %>

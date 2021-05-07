@@ -84,7 +84,7 @@ def car_loop(conn, cur):
             #     new_running = random.choices([True, False], weights=[0.5, 0.5], k=1)[0]
 
             new_aq = max(0, min(100, aq+random.choices([2, -2, 0], weights=[0.1, 0.1, 0.8], k=1)[0]))
-            new_speed = max(30, min(120, speed+random.choices([5, -5, 0], weights=[0.6, 0.3, 0.3], k=1)[0]))
+            new_speed = max(120, min(240, speed+random.choices([5, -5, 0], weights=[0.8, 0.1, 0.1], k=1)[0]))
             new_running = True
 
             if running == False and fuel == 0:

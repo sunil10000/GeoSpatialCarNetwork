@@ -1,17 +1,16 @@
 
 const pool= require('../utils/database');
-module.exports = class Prod{
-    
-    constructor( title, image, price, quantity){
-        this.title = title;
-        this.image = image;
-        this.price = price;
-        this.quantity = quantity;
-    }
 
-    static decTotCreds(dd){
-        this.totcreds=this.totcreds-dd;
-    }
+module.exports = class Car{
+    
+    // constructor( title, image, price, quantity){
+    //     this.title = title;
+    //     this.image = image;
+    //     this.price = price;
+    //     this.quantity = quantity;
+    // }
+
+    
 
     static add_to_cart(id, res){
         
@@ -44,43 +43,6 @@ module.exports = class Prod{
             }
         }
         
-    }
-
-    static buy_cart(curcreds, res){
-        var someVar = [];
-        var jq='select sum(p.price*c.quantity) from cart c join products p on p.id = c.item_id;'
-        pool.query(jq, function(err, rows){
-            if(err) {
-                throw err;
-            } else {
-                setValue(rows);
-            }
-        });
-        function setValue(value) {
-            someVar = value;
-
-            var dd=(someVar['rows'][0]['sum']);
-            if (dd>curcreds){
-                res.redirect('/cart');
-            }
-            else{
-                console.log(dd);
-                console.log(curcreds);
-
-                var fq='insert into orders select * from cart \
-                on conflict (user_id, item_id) do update set quantity = orders.quantity + excluded.quantity;'
-                pool.query(fq);
-
-                var dq='delete from cart;'
-                pool.query(dq);
-                
-                Prod.decTotCreds(dd);
-                console.log(Prod.totcreds);
-                res.redirect('/orders');
-            }
-
-        }
-
     }
 
     add_prod(){
