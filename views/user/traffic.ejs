@@ -1,0 +1,108 @@
+<%- include('../includes/head.ejs') %>
+<link rel="stylesheet" href="/css/forms.css">
+<link rel="stylesheet" href="/css/product.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+<style>
+    .accordion {
+      background-color: #eee;
+      color: #444;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 15px;
+      transition: 0.4s;
+    }
+    
+    .active, .accordion:hover {
+      background-color: #ccc; 
+    }
+    
+    .panel {
+      padding: 0 18px;
+      display: none;
+      background-color: white;
+      overflow: hidden;
+    }
+    </style>
+</head>
+
+<body>
+<%- include('../includes/navigation.ejs') %>
+
+<main>
+    <h2 id="ah">Traffic</h2>
+    <div id="map" class="map" style="margin:0 auto; width:70%;"></div>
+    <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content"></div>
+    </div>
+
+
+    
+
+    
+
+   <script type="text/javascript">
+    var map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()
+        })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([72.8777, 19.0760]),
+        zoom: 15
+      })
+    });
+    var coordinates = [[78.65, -32.65], [-98.65, 12.65]]; 
+
+  var layerLines = new ol.layer.Vector({
+      source: new ol.source.Vector({
+          features: [new ol.Feature({
+              geometry: new ol.geom.LineString(coordinates),
+              name: 'Line'
+          })]
+      }),
+  });
+
+  map.addLayer(layerLines);
+
+    var container = document.getElementById('popup');
+ var content = document.getElementById('popup-content');
+ var closer = document.getElementById('popup-closer');
+
+ var overlay = new ol.Overlay({
+     element: container,
+     autoPan: true,
+     autoPanAnimation: {
+         duration: 250
+     }
+ });
+ map.addOverlay(overlay);
+
+ closer.onclick = function() {
+     overlay.setPosition(undefined);
+     closer.blur();
+     return false;
+ };
+
+ map.on('singleclick', function (event) {
+     if (map.hasFeatureAtPixel(event.pixel) === true) {
+         var coordinate = event.coordinate;
+
+         content.innerHTML = '<b>Car ID :</b> 01<br /><b>Speed: </b>34.5kmph';
+         overlay.setPosition(coordinate);
+     } else {
+         overlay.setPosition(undefined);
+         closer.blur();
+     }
+ });
+  </script>
+
+</main>
+<%- include('../includes/end.ejs') %>
