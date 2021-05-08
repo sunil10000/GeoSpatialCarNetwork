@@ -75,7 +75,41 @@
     </script>
     
 
+    <% var dd = data['rows'] 
+      for(var i=0; i < dd.length; i++) { %>
+
+        <button class="accordion">Car <%=i+1%> </button>
+        <div class="panel">
+          <p>
+            <b>Car ID :</b>   <%=dd[i]['id']%>     <br>
+            <b>Model:</b>     <%=dd[i]['car_name']%>  <br>
+            <b>Running :</b>  <%=dd[i]['running'] %>                <br>
+            <b>Location:</b>  [<%=dd[i]['locx']%>, <%=dd[i]['locy']%>]  <br>
+            <b>Speed:</b>     <%=dd[i]['speed']%>  <br>
+            <b>Fuel: </b>     <%=dd[i]['fuel']%>
+        </p>
+        </div>
+
+        <% } %>
+
 </body>
+<script>
+  var acc = document.getElementsByClassName("accordion");
+  var i;
+  
+  for (i = 0; i < acc.length; i++) {
+    acc[i].addEventListener("click", function() {
+      this.classList.toggle("active");
+      var panel = this.nextElementSibling;
+      if (panel.style.display === "block") {
+        panel.style.display = "none";
+      } else {
+        panel.style.display = "block";
+      }
+    });
+  }
+</script>
+
 <!-- <body onload="initialize_map(); 
 add_map_point(72.8777, 19.0760); 
 add_map_point(48.7786801583205,9.230559183581361);
