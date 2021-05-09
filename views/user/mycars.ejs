@@ -1,8 +1,6 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/css/forms.css">
 <link rel="stylesheet" href="/css/product.css">
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script> -->
 
    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -12,36 +10,32 @@
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
 
+
    <style>
        #myMap { height: 360px; }
-   </style>
 
+      .card {
+        /* Add shadows to create the "card" effect */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+      }
+
+      /* On mouse-over, add a deeper shadow */
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+
+      /* Add some padding inside the card container */
+      .container {
+        padding: 2px 16px;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-auto-flow: row;
+      }
    
-  
-<style>
-    .accordion {
-      background-color: #eee;
-      color: #444;
-      cursor: pointer;
-      padding: 18px;
-      width: 100%;
-      border: none;
-      text-align: left;
-      outline: none;
-      font-size: 15px;
-      transition: 0.4s;
-    }
-    
-    .active, .accordion:hover {
-      background-color: #ccc; 
-    }
-    
-    .panel {
-      padding: 0 18px;
-      display: none;
-      background-color: white;
-      overflow: hidden;
-    }
     </style>
 </head>
 
@@ -50,93 +44,117 @@
 
 <main>
     <h2 id="ah">Where are my cars?</h2>
-    <div id="myMap" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
+    <div id="myMap" class="map" style="margin:0 auto; width:70%; height:600px;"></div>
 
-    <% var dd = data['rows'] 
-      for(var i=0; i < dd.length; i++) { %>
-
-        <button class="accordion">Car <%=i+1%> </button>
-        <div class="panel">
-          <p>
-            <b>Car ID :</b>   <%=dd[i]['id']%>     <br>
-            <b>Model:</b>     <%=dd[i]['car_name']%>  <br>
-            <b>Running :</b>  <%=dd[i]['running'] %>                <br>
-            <b>Location:</b>  [<%=dd[i]['locx']%>, <%=dd[i]['locy']%>]  <br>
-            <b>Speed:</b>     <%=dd[i]['speed']%>  <br>
-            <b>Fuel: </b>     <%=dd[i]['fuel']%>
-        </p>
-        </div>
-
-        <% } %>
+    <div id="myCarsList" class="grid-container"></div>
 
     <script>
-        var acc = document.getElementsByClassName("accordion");
-        var i;
-        
-        for (i = 0; i < acc.length; i++) {
-          acc[i].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if (panel.style.display === "block") {
-              panel.style.display = "none";
-            } else {
-              panel.style.display = "block";
-            }
-          });
-        }
-    </script>
 
-
-    <script>
-        const mymap = L.map('myMap').setView([0, 0], 18);
-
+      //===========  LeafLet INITIALIZATION ======================
+        const mumbaiLatLong = [19.0760, 72.8777]
+        const focusZoom = 16
+        const mymap = L.map('myMap').setView(mumbaiLatLong, focusZoom);
         const attribution =
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
         const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
         const tiles = L.tileLayer(tileUrl, { attribution });
         tiles.addTo(mymap);
-        
-        // marker for car
-        let marker = L.marker([0, 0]).addTo(mymap);
-        
-        // update function
-        var i = 1;
+      //===========  END =========================================
 
-        async function getNew(){
+
+      //========= ADD Car List ====================
+        function carContent(element){
+          return `
+              <b>CarID:</b>     ${element['id']}     <button class="focus" style="float: right;"> Focus </button> <br>
+              <b>Model:</b>     ${element['car_name']}      <br>
+              <b>Running :</b>  ${element['running']}   <br>
+              <b>Location:</b>  [${parseFloat(element['locx']).toFixed(6)}, ${parseFloat(element['locy']).toFixed(6)}] <br>
+              <b>Speed:</b>     ${element['speed']} km/hr     <br>
+              <b>Fuel: </b>     ${parseFloat(element['fuel']).toFixed(2)} liter
+              `;
+        }
+
+        function addCar(element){
+          var div = document.createElement('div');
+          div.setAttribute('id', `car_${element['id']}`);
+          div.setAttribute('class', 'card');
+          div.innerHTML = `
+          <div class="grid-item">
+            <div class="card">
+              <div class="container">
+                <p class="car_content">
+                  ${carContent(element)}
+                </p>
+              </div>
+            </div>
+          </div>
+          `;
+          div.getElementsByClassName("focus")[0].addEventListener("click", () => {
+            var e = markerList[element['id']]._latlng
+            mymap.panTo([e.lat, e.lng], focusZoom)
+          })
+          document.getElementById('myCarsList').appendChild(div);
+        }
+
+        let markerList = {};
+        fetch("http://localhost:3000/api/car", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({"owner": "2"})
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                addCar(element);
+                markerList[element['id']] = L.marker([
+                                        parseFloat(element['locy']),
+                                        parseFloat(element['locx'])
+                                        ]).addTo(mymap)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+
+      //============= END ========================
+
+
+      //======== UPDATE LOOP ================================
+        function updateCar(element){
+          var div = document.getElementById(`car_${element['id']}`);
+          div.getElementsByClassName("car_content")[0].innerHTML = carContent(element)
+          div.getElementsByClassName("focus")[0].addEventListener("click", () => {
+            var e = markerList[element['id']]._latlng
+            mymap.panTo([e.lat, e.lng], focusZoom)
+          })
+        }
+        
+        async function updateCars(){
           console.log("again this!")
             fetch("http://localhost:3000/api", {
-                method: 'post', // or 'PUT'
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({"owner": "2"}) // data can be `string` or {object}!
-                
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({"owner": "2"})
             }).then(function(res){
-                res.json().then(data => ({
-                  data: data,
-                  status: res.status
-                })).then(res => {
-                  rows = res.data.rows
-                  // console.log(res.status, rows)
-                  row = rows[0]
-                  i = i + 5;
-                  // marker.setLatLng([ (i%180)-90, 44])
-                  marker.setLatLng([parseFloat(row['locy']), parseFloat(row['locx'])])
-                  if(i==1){
-                    mymap.flyTo([row['locy'], row['locx']], 18);
-                  }
-                  i=(i+1)%5
-
-                })
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  updateCar(element)
+                  markerList[element['id']].setLatLng([
+                                              parseFloat(element['locy']),
+                                              parseFloat(element['locx'])
+                                            ]);
+                });
+              });
+                // mymap.panTo([row['locy'], row['locx']], 18);
             })
             .catch(function(error ){
                 console.error('Fetch Error:', error)
             })
         }
-        // calling update function
-        getNew();
-        setInterval(getNew, 1000);
+        setInterval(updateCars, 10000);
+
+      //=============== END UPDATE ===================
 
     </script>
 </main>

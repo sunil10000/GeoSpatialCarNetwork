@@ -1,32 +1,43 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/css/forms.css">
 <link rel="stylesheet" href="/css/product.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
-<style>
-    .accordion {
-      background-color: #eee;
-      color: #444;
-      cursor: pointer;
-      padding: 18px;
-      width: 100%;
-      border: none;
-      text-align: left;
-      outline: none;
-      font-size: 15px;
-      transition: 0.4s;
-    }
-    
-    .active, .accordion:hover {
-      background-color: #ccc; 
-    }
-    
-    .panel {
-      padding: 0 18px;
-      display: none;
-      background-color: white;
-      overflow: hidden;
-    }
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
+   <script src="../dist/leaflet.polylineDecorator.js"></script>
+
+
+   <style>
+       #myMap { height: 360px; }
+
+      .card {
+        /* Add shadows to create the "card" effect */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+      }
+
+      /* On mouse-over, add a deeper shadow */
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+
+      /* Add some padding inside the card container */
+      .container {
+        padding: 2px 16px;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-auto-flow: row;
+      }
+   
     </style>
 </head>
 
@@ -34,118 +45,141 @@
 <%- include('../includes/navigation.ejs') %>
 
 <main>
-    <h2 id="ah">Past Journeys</h2>
-    <div id="map" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
-    <div id="popup" class="ol-popup">
-        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-        <div id="popup-content"></div>
-    </div>
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by car ID.." title="Type in a name">
+
+  <h2 id="ah">Past Journeys</h2>
+    <div id="myMap" class="map" style="margin:0 auto; width:70%; height:600px;"></div>
+
+    <!-- <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by car ID.." title="Type in a name">
     <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by Date.." title="Type in a name">
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by Time.." title="Type in a name">
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by Time.." title="Type in a name"> -->
 
+    <div id="myJourneyList" class="grid-container"></div>
 
-    <button class="accordion">Journey 1</button>
-<div class="panel">
-  <p><b>Journey ID: </b>01<br>
-    <b>Car ID: </b>01<br>
-    <b>Date:</b> 20/3/21<br>
-    <b>Start Location: </b>[70.567, 20.190]<br>
-    <b>End Location: </b>[72.567, 19.190]<br>
-    <b>Start Time: </b>19:04<br>
-    <b>End Time: </b>19:32<br>
-    <b>Distance Covered: </b>8.3km<br></p>
-</div>
-
-<button class="accordion">Journey 2</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-    <b>Model:</b> Honda City<br>
-    <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
-
-<button class="accordion">Journey 3</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-        <b>Model:</b> Honda City<br>
-        <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
     <script>
-        var acc = document.getElementsByClassName("accordion");
-        var i;
-        
-        for (i = 0; i < acc.length; i++) {
-          acc[i].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if (panel.style.display === "block") {
-              panel.style.display = "none";
-            } else {
-              panel.style.display = "block";
+
+      //===========  LeafLet INITIALIZATION ======================
+        const mumbaiLatLong = [19.0760, 72.8777]
+        const focusZoom = 16
+        const mymap = L.map('myMap').setView(mumbaiLatLong, focusZoom);
+        const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
+        const tiles = L.tileLayer(tileUrl, { attribution });
+        tiles.addTo(mymap);
+      //===========  END =========================================
+
+
+      //========= ADD Car List ====================
+        function pjContent(element){
+          
+          content = `
+              <b>JourneyID:</b>   ${element['id']}     <button class="focus" style="float: right;"> Focus </button> <br>
+              <b>CarID:</b>       ${element['car_id']}      <br>
+              <b>StartTime :</b>  ${element['start_time']}   <br>
+              <b>EndTime:</b>     ${element['end_time']} <br>
+              `;
+          element['tags'].split(',').forEach(kv => {
+            kv = kv.split('=>');
+            k = kv[0].replace(/['"]+/g, '');
+            v = kv[1].replace(/['"]+/g, '');
+            if(parseFloat(v)){
+              v = parseFloat(v).toFixed(2);
             }
-          });
+
+            content += `<b> ${k}: </b> ${v}`
+            if(k=='avg_speed'){
+              content += ' km/h';
+            }
+            if(k==' fuel_consumed'){
+              content += ' L';
+            }
+            content += '<br>'
+          })
+          return content;
         }
+
+        function addPj(element){
+          var div = document.createElement('div');
+          div.setAttribute('id', `pj_${element['id']}`);
+          div.setAttribute('class', 'card');
+          div.innerHTML = `
+          <div class="grid-item">
+            <div class="card">
+              <div class="container">
+                <p class="pj_content">
+                  ${pjContent(element)}
+                </p>
+              </div>
+            </div>
+          </div>
+          `;
+          div.getElementsByClassName("focus")[0].addEventListener("click", () => {
+            // L.geoJson(element['track']).addTo(mymap);
+          })
+          document.getElementById('myJourneyList').appendChild(div);
+        }
+
+        var a = "";
+        let lineList = {};
+        fetch("http://localhost:3000/api/pj", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({"owner": "2"})
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                addPj(element);
+                L.geoJson({
+                  "type": "Feature",
+                  "properties": {},
+                  "geometry": JSON.parse(element['track'])
+                }).addTo(mymap)
+                a = element['track']
+                // L.polyline(JSON.parse(element['track'])['coordinates']).addTo(mymap);
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+
+      //============= END ========================
+
+
+      //======== UPDATE LOOP ================================
+        function updatePj(element){
+          var div = document.getElementById(`pj_${element['id']}`);
+          div.getElementsByClassName("pj_content")[0].innerHTML = pjContent(element)
+          div.getElementsByClassName("focus")[0].addEventListener("click", () => {
+            L.geoJson(element['track']).addTo(mymap);
+          })
+        }
+        
+        async function updatePjs(){
+          console.log("again this!")
+            fetch("http://localhost:3000/api/pj", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({"owner": "2"})
+            }).then(function(res){
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  // console.log(element);
+                  updatePj(element);
+                  L.geoJson(element['track']).addTo(mymap);
+                });
+              });
+                // mymap.panTo([row['locy'], row['locx']], 18);
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
+        // setInterval(updatePjs, 1000);
+
+      //=============== END UPDATE ===================
+
     </script>
-
-    
-
-   <script type="text/javascript">
-    var map = new ol.Map({
-      target: 'map',
-      layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([72.8777, 19.0760]),
-        zoom: 15
-      })
-    });
-    var coordinates = [[78.65, -32.65], [-98.65, 12.65]]; 
-
-  var layerLines = new ol.layer.Vector({
-      source: new ol.source.Vector({
-          features: [new ol.Feature({
-              geometry: new ol.geom.LineString(coordinates),
-              name: 'Line'
-          })]
-      }),
-  });
-
-  map.addLayer(layerLines);
-
-    var container = document.getElementById('popup');
- var content = document.getElementById('popup-content');
- var closer = document.getElementById('popup-closer');
-
- var overlay = new ol.Overlay({
-     element: container,
-     autoPan: true,
-     autoPanAnimation: {
-         duration: 250
-     }
- });
- map.addOverlay(overlay);
-
- closer.onclick = function() {
-     overlay.setPosition(undefined);
-     closer.blur();
-     return false;
- };
-
- map.on('singleclick', function (event) {
-     if (map.hasFeatureAtPixel(event.pixel) === true) {
-         var coordinate = event.coordinate;
-
-         content.innerHTML = '<b>Car ID :</b> 01<br /><b>Speed: </b>34.5kmph';
-         overlay.setPosition(coordinate);
-     } else {
-         overlay.setPosition(undefined);
-         closer.blur();
-     }
- });
-  </script>
-
 </main>
 <%- include('../includes/end.ejs') %>

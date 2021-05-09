@@ -4,24 +4,6 @@ CREATE EXTENSION if not exists postgis;
 --enable hstore
 CREATE EXTENSION if not exists hstore;
 
-/* WILL BE ADDED ONLY IF NEEDED
--- enable raster support (for 3+)
-CREATE EXTENSION if not exists postgis_raster;
--- Enable Topology
-CREATE EXTENSION if not exists postgis_topology;
--- Enable PostGIS Advanced 3D
--- and other geoprocessing algorithms
--- sfcgal not available with all distributions
-CREATE EXTENSION if not exists postgis_sfcgal;
--- fuzzy matching needed for Tiger
-CREATE EXTENSION if not exists fuzzystrmatch;
--- rule based standardizer
-CREATE EXTENSION if not exists address_standardizer;
--- example rule data set
-CREATE EXTENSION if not exists address_standardizer_data_us;
--- Enable US Tiger Geocoder
-CREATE EXTENSION if not exists postgis_tiger_geocoder;
-*/
 
 -- TOTAL 14 TABLES
 drop table if exists RoadStretchData;
@@ -30,7 +12,6 @@ drop table if exists Journey;
 drop table if exists Car;
 drop table if exists Users;
 
-drop table if exists AirQuality;
 drop table if exists PetrolPump;
 drop table if exists TrafficSignal;
 
@@ -51,6 +32,7 @@ create table RoadStretch(
    road_id INT references Road(id),
    node_a GEOMETRY(POINT,4326),
    node_b GEOMETRY(POINT,4326),
+   air_quality INT,
    unique(road_id, node_a, node_b)
 );
 
@@ -68,10 +50,6 @@ create table PetrolPump(
    fuel_amount FLOAT
 );
 
-create table AirQuality(
-   loc GEOMETRY(POINT,4326) PRIMARY KEY,
-   quality INT
-);
 
 
 -- THIRD
@@ -100,7 +78,7 @@ create table Car(
 
    broke_rule BOOLEAN,
    broke_reason TEXT,
-   past_breaks JSON
+   past_breaks TEXT[]
 );
 
 
