@@ -84,7 +84,7 @@ var blueMarkerIcon = new L.Icon({
 <body>
   <%- include('../includes/police_navigation.ejs') %>
 
-  
+
 <main>
     <h2 id="ah">All Cars in the City</h2>
     <div id="myMap" class="map" style="margin:0 auto; width:70%; height:800px;"></div>
@@ -120,7 +120,7 @@ var blueMarkerIcon = new L.Icon({
               <b>Location:</b>  [${parseFloat(element['locx']).toFixed(6)}, ${parseFloat(element['locy']).toFixed(6)}] <br>
               <b>Speed:</b>     ${element['speed']} km/hr     <br>
               <b>Broke Rule:</b> ${element['broke_reason']}<br>
-              <b> Past Rule breaks:</b> ${element['past_breaks']}
+              <b>Past Rule breaks:</b> ${element['past_breaks']}
           `;
           div.getElementsByClassName("unmark")[0].addEventListener("click", () => {
             console.log(element['id'])

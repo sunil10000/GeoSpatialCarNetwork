@@ -1,31 +1,151 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/css/forms.css">
 <link rel="stylesheet" href="/css/product.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
+<script>
+
+
+</script>
+   <style>
+       #myMap { height: 360px; }
+
+      .card {
+        /* Add shadows to create the "card" effect */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+      }
+
+      /* On mouse-over, add a deeper shadow */
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+
+      /* Add some padding inside the card container */
+      .container {
+        padding: 2px 16px;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-auto-flow: row;
+      }
+   
+    </style>
 </head>
 
 <body>
-<%- include('../includes/police_navigation.ejs') %>
+  <%- include('../includes/police_navigation.ejs') %>
 
 <main>
-    <h2 id="ah">City</h2>
-    <div id="map" class="map" style="margin:0 auto; width:70%;"></div>
+    <h2 id="ah">All Cars in the City</h2>
+    <div id="myMap" class="map" style="margin:0 auto; width:70%; height:800px;"></div>
+    
+    <script>
 
-   <script type="text/javascript">
-    var map = new ol.Map({
-      target: 'map',
-      layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([72.8777, 19.0760]),
-        zoom: 15
-      })
-    });
-  </script>
+      //===========  LeafLet INITIALIZATION ======================
+        const mumbaiLatLong = [19.0760, 72.8777]
+        const focusZoom = 16
+        const mymap = L.map('myMap').setView(mumbaiLatLong, focusZoom);
+        const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
+        const tiles = L.tileLayer(tileUrl, { attribution });
+        tiles.addTo(mymap);
+      //===========  END =========================================
+     
+      //========= ADD Car List ====================
+      let roadList = {};
+        function roadContent(element){ 
+           // <button class="unmark"> Unmark Red Car </button> <br>
+          var div = document.createElement('div');
+          div.innerHTML =  `
+              <b>ID: </b>       ${element['id']} <br>
+              <b>Current No of Cars: </b>        ${element['no_of_cars']}<br>
+              <b>Avg Speed of current cars:</b>   ${parseFloat(element['avg_speed']).toFixed(2)} Km/h <br>
+              <b>Linestring: </b> ${JSON.parse(element['track'])['coordinates']}
+          `;
+          return div;
+        }
+
+  
+        function addRoadPopup(element){
+          var r = Math.floor(Math.random() * 255);
+          var g = Math.floor(Math.random() * 255);
+          var b = Math.floor(Math.random() * 255);
+          roadList[element['id']] = L.polyline(
+                  JSON.parse(element['track'])['coordinates']
+                ).setStyle(
+                      {
+                        color: "rgb("+r+","+g+","+b+")",
+                        weight: 10,
+                        smoothFactor: 1
+                      }
+                )
+                .bindPopup(roadContent(element))
+                .addTo(mymap);
+                      
+        }
+
+        
+        fetch("http://localhost:3000/api/cur_road_data", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                addRoadPopup(element)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+
+      //============= END ========================
+
+
+      //======== UPDATE LOOP ================================
+
+      function updateRoadPopup(element){
+        roadList[element['id']].getPopup()
+                    .setContent(roadContent(element))
+      }
+        
+        async function updateRoads(){
+          console.log("road update")
+            fetch("http://localhost:3000/api/cur_road_data", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+            }).then(function(res){
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  
+                  if(roadList[element['id']]){
+                    updateRoadPopup(element)
+                  }
+                  else{
+                    addRoadPopup(element)
+                  }
+                  
+                })
+              })
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
+        setInterval(updateRoads, 5000);
+    </script>
 </main>
 <%- include('../includes/end.ejs') %>
+ 

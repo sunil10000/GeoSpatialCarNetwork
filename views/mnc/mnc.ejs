@@ -98,22 +98,11 @@
           div.innerHTML =  `
               Average Speed and Fuel consumed by all passed Cars
               <b>ID: </b>       ${element['id']} <br>
-              <b> No of Cars: </b> ${element['no_of_cars']}<br>
+              <b>No of Cars: </b> ${element['no_of_cars']}<br>
               <b>Speed:</b>      ${parseFloat(element['avg_speed']).toFixed(2)} Km/h <br>
               <b>Fuel Consumed:</b>  ${parseFloat(element['avg_fuel_consumed']).toFixed(4)} L <br>
               <b>Linestring: </b> ${JSON.parse(element['track'])['coordinates']}
           `;
-          // div.getElementsByClassName("unmark")[0].addEventListener("click", () => {
-          //   console.log(element['id'])
-          //   fetch("http://localhost:3000/api/unmark_car", {
-          //       method: 'post',
-          //       headers: {'Content-Type': 'application/json'},
-          //       body: JSON.stringify({"car_id": element['id']})
-          //   })
-          //   .catch(function(error ){
-          //       console.error('Fetch Error:', error)
-          //   })
-          // })
           return div; 
         }
 

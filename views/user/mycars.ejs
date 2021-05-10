@@ -92,15 +92,21 @@ var greenIcon = new MarkerIcon({
 
       //========= ADD Car List ====================
       let markerList = {};
-        function carContent(element){
-          return `
-              <b>CarID:</b>     ${element['id']}     <button class="focus" style="float: right;"> Focus </button> <br>
+        function carContent(element, isButton){
+          var content = ``;
+          if(isButton){
+            content = `<b>CarID:</b>     ${element['id']}     <button class="focus" style="float: right;"> Focus </button> <br>`
+          }
+          else{
+            content = `<b>CarID:</b>     ${element['id']}<br>`
+          }
+          content +=`
               <b>Model:</b>     ${element['car_name']}      <br>
-              <b>Running :</b>  ${element['running']}   <br>
               <b>Location:</b>  [${parseFloat(element['locx']).toFixed(6)}, ${parseFloat(element['locy']).toFixed(6)}] <br>
               <b>Speed:</b>     ${element['speed']} km/hr     <br>
               <b>Fuel: </b>     ${parseFloat(element['fuel']).toFixed(2)} liter
               `;
+          return content;
         }
 
         function addCar(element){
@@ -112,7 +118,7 @@ var greenIcon = new MarkerIcon({
             <div class="card">
               <div class="container">
                 <p class="car_content">
-                  ${carContent(element)}
+                  ${carContent(element, true)}
                 </p>
               </div>
             </div>
@@ -138,6 +144,7 @@ var greenIcon = new MarkerIcon({
                 markerList[element['id']] = L.marker([
                                         parseFloat(element['locy']),
                                         parseFloat(element['locx'])])
+                                        .bindPopup(carContent(element, false))
                                         .addTo(mymap)
               });
             });
@@ -152,7 +159,7 @@ var greenIcon = new MarkerIcon({
       //======== UPDATE LOOP ================================
         function updateCar(element){
           var div = document.getElementById(`car_${element['id']}`);
-          div.getElementsByClassName("car_content")[0].innerHTML = carContent(element)
+          div.getElementsByClassName("car_content")[0].innerHTML = carContent(element, true)
           div.getElementsByClassName("focus")[0].addEventListener("click", () => {
             var e = markerList[element['id']]._latlng
             mymap.panTo([e.lat, e.lng], focusZoom)
@@ -172,6 +179,8 @@ var greenIcon = new MarkerIcon({
                                               parseFloat(element['locy']),
                                               parseFloat(element['locx'])
                                             ]);
+                  markerList[element['id']].getPopup()
+                    .setContent(carContent(element, false))
                 });
               });
             })

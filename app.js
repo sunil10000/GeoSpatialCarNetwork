@@ -183,4 +183,22 @@ app.post('/api/hour_road_data', (req, res, next) => {
         });
 })
 
+
+app.post('/api/cur_road_data', (req, res, next) => {
+    pool.query("select R.id as id,\
+    st_asgeojson(st_flipcoordinates(st_makeline(node_a, node_b))) as track,\
+    avg(C.speed) as avg_speed, count(C.id) as no_of_cars\
+    from roadstretch R, roadstretchdata RD, car C where R.id = RD.stretch_id and RD.car_id = C.id\
+    and RD.end_time is null group by R.id", function(err, row){
+        if (err){
+            throw err;
+        }
+        else{
+            res.set("Content-Type", 'application/json');
+            res.json(row)
+        }
+        });
+
+})
+
 app.listen(3000);
