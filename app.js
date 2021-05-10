@@ -3,7 +3,8 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const pool = require('./utils/database');
-
+// var flash = require('connect-flash');
+var session = require('express-session');
 
 const mncRo = require('./routes/mnc');
 
@@ -14,10 +15,16 @@ const userTrafficRo = require('./routes/userTraffic');
 const policeTrafficRo = require('./routes/policeTraffic');
 const allcarsRo = require('./routes/allcars');
 
+const loginRo = require('./routes/login')
 
 
 
 const app = express();
+app.use(session({ cookie: { maxAge: 60000 }, 
+    secret: 'woot',
+    resave: false, 
+    saveUninitialized: false}));
+// app.use(flash())
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 app.use(bodyParser.urlencoded({ extended:true}));
@@ -26,6 +33,8 @@ app.use(express.json({
     type: ['application/json', 'text/plain']
   }))
 
+
+app.use('/', loginRo);
 app.use('/mnc', mncRo);
 
 app.use('/user/mycars',mycarsRo);
@@ -39,7 +48,7 @@ app.post('/api/car', (req, res, next) => {
         // console.log("inside post req.body:", req.body);
 
         pool.query('SELECT id, car_name, running, speed, fuel, st_x(loc) as locx, st_y(loc) as locy\
-            FROM car where car_owner=$1 order by id', [req.body.owner], function(err, row){
+            FROM car where car_owner=$1 order by id', [req.body.uid], function(err, row){
                 if (err){
                     throw err;
                 }
@@ -71,8 +80,6 @@ app.post('/api/all_cars', (req, res, next) => {
 })
 
 app.post('/api/unmark_car', (req, res, next) => {
-    console.log("hi")
-    console.log("inside unmark req.body:", req.body);
 
     pool.query("update car set past_breaks = past_breaks || broke_reason,\
             broke_rule = false, broke_reason='' where id = $1 and broke_rule;",
@@ -101,7 +108,7 @@ app.post('/api/pj', (req, res, next) => {
                 to_char(end_time, 'YYYY-MM-DD  HH24:MI') as end_time,\
                 tags, st_asgeojson(st_flipcoordinates(track)) as track,\
                 st_astext(st_startpoint(st_flipcoordinates(track))) as start_point FROM journey where car_id in\
-            (select car_id from car where car_owner=$1) order by id", [req.body.owner], function(err, row){
+            (select car_id from car where car_owner=$1) order by id", [req.body.uid], function(err, row){
             if (err){
                 throw err;
             }
@@ -199,6 +206,15 @@ app.post('/api/cur_road_data', (req, res, next) => {
         }
         });
 
+})
+
+app.post('/logout', (req, res, next) => {
+    req.session.destroy(err => {
+        if(err){
+            return console.lor(err);
+        }
+        res.redirect("/");
+    })
 })
 
 app.listen(3000);

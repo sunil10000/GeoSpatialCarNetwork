@@ -55,7 +55,9 @@
     <div id="myJourneyList" class="grid-container"></div>
 
     <script>
-
+  var uname = '<%- JSON.stringify(uname) %>'
+      var upassword = '<%- JSON.stringify(upassword) %>'
+      var uid = '<%- JSON.stringify(uid) %>'
       //===========  LeafLet INITIALIZATION ======================
         const mumbaiLatLong = [19.0760, 72.8777]
         const focusZoom = 16
@@ -142,7 +144,7 @@ var a;
         fetch("http://localhost:3000/api/pj", {
           method: 'post',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({"owner": "2"})
+          body: JSON.stringify({"uname": uname, "upassword": upassword, "uid": uid})
         }).then(res => {
             res.json().then(data => {
               data.rows.forEach(element => {
@@ -189,7 +191,7 @@ var a;
             fetch("http://localhost:3000/api/pj", {
                 method: 'post',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({"owner": "2"})
+                body: JSON.stringify({"uname": uname, "upassword": upassword, "uid": uid})
             }).then(function(res){
               res.json().then(data => {
                 data.rows.forEach(element => {

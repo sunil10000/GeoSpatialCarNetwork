@@ -7,7 +7,10 @@ exports.get_test = (req,res,next) => {
         pageTitle: 'All Cars',
         path: '/police/allcars',
         // username: req.query.username,
-        editing: false
+        editing: false,
+        uname: req.session.username,
+        upassword: req.session.password,
+        uid: req.session.uid
     });
 
 

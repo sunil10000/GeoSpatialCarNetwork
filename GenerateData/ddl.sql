@@ -55,10 +55,11 @@ create table PetrolPump(
 -- THIRD
 create table Users(
    id SERIAL PRIMARY KEY, 
-   uname TEXT, 
+   uname TEXT,
    upassword TEXT, 
    urole TEXT,
-   check (urole in ('admin', 'driver', 'police', 'municipality'))
+   unique(uname),
+   check (urole in ('driver', 'police', 'municipality'))
 );
 
 create table Car(
