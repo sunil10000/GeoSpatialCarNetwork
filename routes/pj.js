@@ -8,6 +8,5 @@ const router = express.Router();
 
 
 router.get('/',pjCon.get_test);
-router.post('/',pjCon.post_test);
 
 module.exports = router;

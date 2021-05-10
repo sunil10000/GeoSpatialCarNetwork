@@ -2,17 +2,18 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
+const pool = require('./utils/database');
 
-const adminRo = require('./routes/admin');
-const userRo = require('./routes/user');
-const policeRo = require('./routes/police');
+
 const mncRo = require('./routes/mnc');
+
 const mycarsRo = require('./routes/mycars');
 const pjRo = require('./routes/pj');
-const trafficRo = require('./routes/traffic');
-const rbRo = require('./routes/rb');
+const userTrafficRo = require('./routes/userTraffic');
+
+const policeTrafficRo = require('./routes/policeTraffic');
 const allcarsRo = require('./routes/allcars');
-const pool = require('./utils/database');
+
 
 
 
@@ -25,15 +26,14 @@ app.use(express.json({
     type: ['application/json', 'text/plain']
   }))
 
-app.use('/admin',adminRo);
-app.use('/user', userRo);
-app.use('/police', policeRo);
 app.use('/mnc', mncRo);
+
 app.use('/user/mycars',mycarsRo);
 app.use('/user/pastjourneys', pjRo);
-app.use('/user/traffic', trafficRo);
-app.use('/police/rulebreakers', rbRo);
+app.use('/user/traffic', userTrafficRo);
+
 app.use('/police/allcars', allcarsRo);
+app.use('/police/traffic', policeTrafficRo);
 
 app.post('/api/car', (req, res, next) => {
         // console.log("inside post req.body:", req.body);
@@ -51,6 +51,48 @@ app.post('/api/car', (req, res, next) => {
 
 
 })
+app.post('/api/all_cars', (req, res, next) => {
+    // console.log("inside post req.body:", req.body);
+
+    pool.query('SELECT C.id as id, car_name, speed, st_x(loc) as locx,\
+    st_y(loc) as locy, U.uname as owner, broke_rule, broke_reason, past_breaks\
+    FROM car C, users U where C.car_owner = U.id;', function(err, row){
+            if (err){
+                console.log(error);
+                throw err;
+            }
+            else{
+                res.set("Content-Type", 'application/json');
+                res.json(row)
+            }
+    });
+
+
+})
+
+app.post('/api/unmark_car', (req, res, next) => {
+    console.log("hi")
+    console.log("inside unmark req.body:", req.body);
+
+    pool.query("update car set past_breaks = past_breaks || broke_reason,\
+            broke_rule = false, broke_reason='' where id = $1 and broke_rule;",
+            [req.body.car_id],
+            function(err, row){
+            if (err){
+                console.log(error);
+                throw err;
+            }
+            else{
+                console.log(row)
+                res.set("Content-Type", 'application/json');
+                res.json("{updated: true}")
+            }
+    });
+
+
+})
+
+
 
 app.post('/api/pj', (req, res, next) => {
 
@@ -68,7 +110,77 @@ app.post('/api/pj', (req, res, next) => {
                 res.json(row)
             }
     });
+})
+
+app.post('/api/tsig', (req, res, next) => {
+
+    pool.query("SELECT id, st_astext(st_flipcoordinates(loc)) as loc,\
+                signal from trafficsignal", function(err, row){
+            if (err){
+                throw err;
+            }
+            else{
+                res.set("Content-Type", 'application/json');
+                res.json(row)
+            }
+    });
 
 
 })
+
+app.post('/api/ppump', (req, res, next) => {
+
+    pool.query("SELECT id, st_astext(st_flipcoordinates(loc)) as loc,\
+                fuel_amount from petrolpump", function(err, row){
+            if (err){
+                throw err;
+            }
+            else{
+                res.set("Content-Type", 'application/json');
+                res.json(row)
+            }
+    });
+
+
+})
+
+
+app.post('/api/road_data', (req, res, next) => {
+    pool.query("select R.id as id,\
+    st_asgeojson(st_flipcoordinates(st_makeline(node_a, node_b))) as track,\
+    avg((st_length(\
+     st_makeline(node_a, node_b)::geography)*18)/(5* extract(epoch from (end_time - start_time))\
+    )) as avg_speed, avg(fuel_consumed) as avg_fuel_consumed, count(car_id) as no_of_cars\
+    from roadstretch R, roadstretchdata RD where R.id = RD.stretch_id\
+    and RD.end_time is not null group by R.id", function(err, row){
+        if (err){
+            throw err;
+        }
+        else{
+            res.set("Content-Type", 'application/json');
+            res.json(row)
+        }
+        });
+
+})
+
+app.post('/api/hour_road_data', (req, res, next) => {
+    pool.query("select R.id as id,\
+    st_asgeojson(st_flipcoordinates(st_makeline(node_a, node_b))) as track,\
+    to_char(date_trunc('minute', start_time), 'YYYY-MM-DD  HH24:MI') as start_hour,\
+    avg((st_length(\
+     st_makeline(node_a, node_b)::geography)*18)/(5* extract(epoch from (end_time - start_time))\
+    )) as avg_speed, avg(fuel_consumed) as avg_fuel_consumed, count(car_id) as no_of_cars\
+    from roadstretch R, roadstretchdata RD where R.id = RD.stretch_id\
+    and RD.end_time is not null group by R.id, date_trunc('minute', start_time)", function(err, row){
+        if (err){
+            throw err;
+        }
+        else{
+            res.set("Content-Type", 'application/json');
+            res.json(row)
+        }
+        });
+})
+
 app.listen(3000);

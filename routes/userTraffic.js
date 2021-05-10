@@ -2,12 +2,11 @@ const path = require('path');
 const url = require('url');
 const express = require('express');
 
-const userCon = require('../controllers/user');
+const userTrafficCon = require('../controllers/userTraffic');
 
 const router = express.Router();
 
 
-router.get('/',userCon.get_test);
-router.post('/',userCon.post_test);
+router.get('/',userTrafficCon.get_test);
 
 module.exports = router;

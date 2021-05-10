@@ -34,7 +34,7 @@ declare
 begin
 
     
-    for car_row in select * from car where id=1
+    for car_row in select * from car
     loop
         -- =========== CONSUME FUEL and INTERACT WITH PETROL PUMP 
         new_fuel := car_row.fuel - car_row.speed*25/180000;
@@ -244,5 +244,3 @@ begin
 end; $$;
 
 -- MARK UNREAD
--- update car set  past_breaks = past_breaks || broke_reason,
---                 broke_rule = false, broke_reason='' where id = 1;

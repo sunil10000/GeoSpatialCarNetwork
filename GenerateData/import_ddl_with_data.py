@@ -45,7 +45,7 @@ def add_petrol_pumps(conn, cur):
     # Install Petrol Pumps on 20% node_points
     cur.execute("INSERT INTO petrolpump(loc, fuel_amount) (SELECT node_a,1000 FROM\
          ((SELECT node_a from RoadStretch) union (SELECT node_b from Roadstretch)) as foo\
-             ORDER BY RANDOM() LIMIT 1000 );")
+             ORDER BY RANDOM() LIMIT 100 );")
     conn.commit()
     return
 

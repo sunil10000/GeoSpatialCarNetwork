@@ -21,7 +21,7 @@ def connect():
 
 def car_loop(conn, cur):
     while(True):
-        sleep(2) 
+        sleep(1)
         upd = open('car_update.sql', 'r').read()
         cur.execute(upd)
         conn.commit()

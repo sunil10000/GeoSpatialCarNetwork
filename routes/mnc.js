@@ -8,6 +8,5 @@ const router = express.Router();
 
 
 router.get('/',mncCon.get_test);
-router.post('/',mncCon.post_test);
 
 module.exports = router;

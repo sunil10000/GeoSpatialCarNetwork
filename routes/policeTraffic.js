@@ -2,12 +2,11 @@ const path = require('path');
 const url = require('url');
 const express = require('express');
 
-const policeCon = require('../controllers/police');
+const policeTrafficCon = require('../controllers/policeTraffic');
 
 const router = express.Router();
 
 
-router.get('/',policeCon.get_test);
-router.post('/',policeCon.post_test);
+router.get('/',policeTrafficCon.get_test);
 
 module.exports = router;

@@ -69,7 +69,9 @@
       //===========  END =========================================
 
 
-      //========= ADD Car List ====================
+      //========= ADD Journey List ====================
+      let lineList = {};
+
         function pjContent(element){
           
           content = `
@@ -97,7 +99,7 @@
           })
           return content;
         }
-
+var a;
         function addPj(element){
           var div = document.createElement('div');
           div.setAttribute('id', `pj_${element['id']}`);
@@ -113,6 +115,22 @@
             </div>
           </div>
           `;
+
+          var r = Math.floor(Math.random() * 255);
+          var g = Math.floor(Math.random() * 255);
+          var b = Math.floor(Math.random() * 255);
+          
+          lineList[element['id']] = L.polyline(
+                  JSON.parse(element['track'])['coordinates']
+                ).setStyle(
+                      {
+                        color: "rgb("+r+","+g+","+b+")",
+                        weight: 5,
+                        smoothFactor: 1
+                      }
+                ).addTo(mymap);
+
+          a = lineList[element['id']]
           div.getElementsByClassName("focus")[0].addEventListener("click", () => {
             var sp = element['start_point'];
             sp = sp.substr(6, sp.length-7).split(" ");
@@ -121,8 +139,6 @@
           document.getElementById('myJourneyList').appendChild(div);
         }
 
-        var a,b;
-        let lineList = {};
         fetch("http://localhost:3000/api/pj", {
           method: 'post',
           headers: {'Content-Type': 'application/json'},
@@ -131,18 +147,16 @@
             res.json().then(data => {
               data.rows.forEach(element => {
                 addPj(element);
-                b = element['start_point']
-                var pl = L.polyline(JSON.parse(element['track'])['coordinates']);
-                pl.addTo(mymap);
-                L.polylineDecorator(pl, {
-                        patterns: [
-                            {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
-                              {pixelSize: 8, polygon: false, 
-                                pathOptions: {stroke: true}}
-                                )
-                            }
-                            ]
-                    }).addTo(mymap)
+                
+                // L.polylineDecorator(pl, {
+                //         patterns: [
+                //             {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
+                //               {pixelSize: 8, polygon: false, 
+                //                 pathOptions: {stroke: true}}
+                //                 )
+                //             }
+                //             ]
+                //     }).addTo(mymap)
               });
             });
           })
@@ -156,12 +170,18 @@
       //======== UPDATE LOOP ================================
         function updatePj(element){
           var div = document.getElementById(`pj_${element['id']}`);
-          div.getElementsByClassName("pj_content")[0].innerHTML = pjContent(element)
-          div.getElementsByClassName("focus")[0].addEventListener("click", () => {
-            var sp = element['start_point'];
-            sp = sp.substr(6, sp.length-7).split(" ");
-            mymap.panTo([parseFloat(sp[0]), parseFloat(sp[1])], focusZoom);
-          })
+          if(div){
+            lineList[element['id']].setLatLngs(JSON.parse(element['track'])['coordinates'])
+            div.getElementsByClassName("pj_content")[0].innerHTML = pjContent(element)
+            div.getElementsByClassName("focus")[0].addEventListener("click", () => {
+              var sp = element['start_point'];
+              sp = sp.substr(6, sp.length-7).split(" ");
+              mymap.panTo([parseFloat(sp[0]), parseFloat(sp[1])], focusZoom);
+            })
+          }
+          else{
+            addPj(element);
+          }
         }
         
         async function updatePjs(){
@@ -174,18 +194,18 @@
               res.json().then(data => {
                 data.rows.forEach(element => {
                   updatePj(element);
-                  var pl = L.polyline(JSON.parse(element['track'])['coordinates']);
-                  pl.addTo(mymap);
-                  L.polylineDecorator(pl, {
-                          patterns: [
-                              {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
-                                {pixelSize: 15, polygon: false, 
-                                  pathOptions: {stroke: true}}
-                                  )
-                              }
-                              ],
-                      color: 'black', weight: '5'
-                      }).addTo(mymap)
+                  // var pl = L.polyline(JSON.parse(element['track'])['coordinates']);
+                  // pl.addTo(mymap);
+                  // L.polylineDecorator(pl, {
+                  //         patterns: [
+                  //             {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
+                  //               {pixelSize: 15, polygon: false, 
+                  //                 pathOptions: {stroke: true}}
+                  //                 )
+                  //             }
+                  //             ],
+                  //     color: 'black', weight: '5'
+                  //     }).addTo(mymap)
                 });
               });
             })

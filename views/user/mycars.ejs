@@ -10,7 +10,33 @@
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
 
+<script>
+ var MarkerIcon = L.Icon.extend({
+    options: {
+       iconSize:     [30, 45],
+       shadowSize:   [30, 45],
+    }
+});
+var pumpIcon = new MarkerIcon({
+    iconUrl: '../images/pump.png',
+    iconSize: [15, 30]
+})
 
+var redIcon = new MarkerIcon({
+  iconUrl: '../images/red.png',
+  iconSize: [15, 15]
+})
+
+var yellowIcon = new MarkerIcon({
+  iconUrl: '../images/yellow.png',
+  iconSize: [15, 15]
+})
+
+var greenIcon = new MarkerIcon({
+  iconUrl: '../images/green.png',
+  iconSize: [15, 15]
+})
+</script>
    <style>
        #myMap { height: 360px; }
 
@@ -65,6 +91,7 @@
 
 
       //========= ADD Car List ====================
+      let markerList = {};
         function carContent(element){
           return `
               <b>CarID:</b>     ${element['id']}     <button class="focus" style="float: right;"> Focus </button> <br>
@@ -98,7 +125,7 @@
           document.getElementById('myCarsList').appendChild(div);
         }
 
-        let markerList = {};
+        
         fetch("http://localhost:3000/api/car", {
           method: 'post',
           headers: {'Content-Type': 'application/json'},
@@ -107,10 +134,11 @@
             res.json().then(data => {
               data.rows.forEach(element => {
                 addCar(element);
+                b = element;
                 markerList[element['id']] = L.marker([
                                         parseFloat(element['locy']),
-                                        parseFloat(element['locx'])
-                                        ]).addTo(mymap)
+                                        parseFloat(element['locx'])])
+                                        .addTo(mymap)
               });
             });
           })
@@ -132,8 +160,7 @@
         }
         
         async function updateCars(){
-          console.log("again this!")
-            fetch("http://localhost:3000/api", {
+            fetch("http://localhost:3000/api/car", {
                 method: 'post',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({"owner": "2"})
@@ -147,16 +174,129 @@
                                             ]);
                 });
               });
-                // mymap.panTo([row['locy'], row['locx']], 18);
             })
             .catch(function(error ){
                 console.error('Fetch Error:', error)
             })
         }
-        setInterval(updateCars, 10000);
+        setInterval(updateCars, 1000);
 
       //=============== END UPDATE ===================
+
+      //=============== ADD TRAFFIC SIGNAL and PETROL PUMP
+      var b;
+      let traffic_list = {}, petrol_list = {};
+        fetch("http://localhost:3000/api/tsig", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                var t_loc = element['loc']
+                t_loc = t_loc.substr(6, t_loc.length-7).split(" ");
+                var t_icon = NaN
+                if(element['signal']=='R'){
+                  t_icon = redIcon
+                }
+                else if(element['signal']=='G'){
+                  t_icon = greenIcon
+                }
+                else{
+                  t_icon = yellowIcon
+                }
+                traffic_list[element['id']] = L.marker([
+                                        parseFloat(t_loc[0]),
+                                        parseFloat(t_loc[1])
+                                        ]
+                                        ,{
+                                          icon: t_icon
+                                        }
+                                        )
+                                    .bindPopup(`ID: ${element['id']} <br>Signal: ${element['signal']}`)
+                                    .addTo(mymap)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+
+        fetch("http://localhost:3000/api/ppump", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                var p_loc = element['loc']
+                p_loc = p_loc.substr(6, p_loc.length-7).split(" ");
+                petrol_list[element['id']] = L.marker([
+                                        parseFloat(p_loc[0]),
+                                        parseFloat(p_loc[1])
+                                        ]
+                                        ,{
+                                          icon: pumpIcon
+                                        }
+                                        )
+                                    .bindPopup(`ID: ${element['id']} <br>Fuel: ${element['fuel_amount']}`)
+                                    .addTo(mymap)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+      //=============== END 
+
+      //=============== UPDATE TRAFFIC SIGNAL and PETROL PUMP
+      async function updateTrafficPetrol(){
+            fetch("http://localhost:3000/api/tsig", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+            }).then(res => {
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  var t_icon = NaN
+                  if(element['signal']=='R'){
+                    t_icon = redIcon
+                  }
+                  else if(element['signal']=='G'){
+                    t_icon = greenIcon
+                  }
+                  else{
+                    t_icon = yellowIcon
+                  }
+                  traffic_list[element['id']].getPopup().setContent(
+                    `ID: ${element['id']} <br>Signal: ${element['signal']}`
+                  )
+                  traffic_list[element['id']].setIcon(t_icon)
+                });
+              });
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+
+            fetch("http://localhost:3000/api/ppump", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+            }).then(function(res){
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  petrol_list[element['id']].getPopup().setContent(
+                    `ID: ${element['id']} <br>Fuel: ${element['fuel_amount']}`
+                  )
+                });
+              });
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
+
+        setInterval(updateTrafficPetrol, 1000);
+      //=============== END
 
     </script>
 </main>
 <%- include('../includes/end.ejs') %>
+ 

@@ -1,167 +1,286 @@
 <%- include('../includes/head.ejs') %>
 <link rel="stylesheet" href="/css/forms.css">
 <link rel="stylesheet" href="/css/product.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.5.0/css/ol.css" type="text/css">
-<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
-<style>
-    .accordion {
-      background-color: #eee;
-      color: #444;
-      cursor: pointer;
-      padding: 18px;
-      width: 100%;
-      border: none;
-      text-align: left;
-      outline: none;
-      font-size: 15px;
-      transition: 0.4s;
+
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+
+<script>
+ var MarkerIcon = L.Icon.extend({
+    options: {
+       iconSize:     [30, 45],
+       shadowSize:   [30, 45],
     }
-    
-    .active, .accordion:hover {
-      background-color: #ccc; 
-    }
-    
-    .panel {
-      padding: 0 18px;
-      display: none;
-      background-color: white;
-      overflow: hidden;
-    }
+});
+
+var redIcon = new MarkerIcon({
+  iconUrl: '../images/red.png',
+  iconSize: [15, 15]
+})
+
+var yellowIcon = new MarkerIcon({
+  iconUrl: '../images/yellow.png',
+  iconSize: [15, 15]
+})
+
+var greenIcon = new MarkerIcon({
+  iconUrl: '../images/green.png',
+  iconSize: [15, 15]
+})
+
+var redMarkerIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  // shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var blueMarkerIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  // shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+
+</script>
+   <style>
+       #myMap { height: 360px; }
+
+      .card {
+        /* Add shadows to create the "card" effect */
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        transition: 0.3s;
+      }
+
+      /* On mouse-over, add a deeper shadow */
+      .card:hover {
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+      }
+
+      /* Add some padding inside the card container */
+      .container {
+        padding: 2px 16px;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-auto-flow: row;
+      }
+   
     </style>
 </head>
 
 <body>
-<%- include('../includes/police_navigation.ejs') %>
+  <%- include('../includes/police_navigation.ejs') %>
 
+  
 <main>
-    <h2 id="ah">All city Cars</h2>
-    <div id="map" class="map" style="margin:0 auto; width:300px; height:200px;"></div>
-    <div id="popup" class="ol-popup">
-        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-        <div id="popup-content"></div>
-    </div>
+    <h2 id="ah">All Cars in the City</h2>
+    <div id="myMap" class="map" style="margin:0 auto; width:70%; height:800px;"></div>
 
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for car ID.." title="Type in a name">
-
-
-
-<script>
-function myFunction() {
-    var input, filter, ul, li, a, i, txtValue;
-    input = document.getElementById("myInput");
-    filter = input.value.toUpperCase();
-    ul = document.getElementById("myUL");
-    li = ul.getElementsByTagName("li");
-    for (i = 0; i < li.length; i++) {
-        a = li[i].getElementsByTagName("a")[0];
-        txtValue = a.textContent || a.innerText;
-        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-            li[i].style.display = "";
-        } else {
-            li[i].style.display = "none";
-        }
-    }
-}
-</script>
-
-    <button class="accordion">Car 1</button>
-<div class="panel">
-  <p><b>Car ID :</b>01<br>
-    <b>Owner ID:</b>21<br>
-    <b>Model:</b> Honda Amaze<br>
-    <b>Running :</b> Yes<br> <b>Location:</b> [72.8777, 19.0760]<br>
-    <b>Speed:</b> 34.5km/hr<br>
-    <b>Fuel: </b>24L(48%)
-</p>
-</div>
-
-<button class="accordion">Car 2</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-    <b>Model:</b> Honda City<br>
-    <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
-
-<button class="accordion">Car 3</button>
-<div class="panel">
-    <p><b>Car ID :</b>01<br>
-        <b>Model:</b> Honda City<br>
-        <b>Running :</b> No<br> <b>Location:</b> [70.567, 20.190]<br></p>
-</div>
     <script>
-        var acc = document.getElementsByClassName("accordion");
-        var i;
-        
-        for (i = 0; i < acc.length; i++) {
-          acc[i].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if (panel.style.display === "block") {
-              panel.style.display = "none";
-            } else {
-              panel.style.display = "block";
-            }
-          });
+
+      //===========  LeafLet INITIALIZATION ======================
+        const mumbaiLatLong = [19.0760, 72.8777]
+        const focusZoom = 16
+        const mymap = L.map('myMap').setView(mumbaiLatLong, focusZoom);
+        const attribution =
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'; 
+        const tiles = L.tileLayer(tileUrl, { attribution });
+        tiles.addTo(mymap);
+      //===========  END =========================================
+
+
+      //========= ADD Car List ====================
+      let markerList = {};
+        function carContent(element){
+          if(!element['broke_rule']){
+            element['broke_reason']='NULL'
+          }
+
+          var div = document.createElement('div');
+          div.innerHTML =  `
+              <button class="unmark"> Unmark Red Car </button> <br>
+              <b>CarID:</b>     ${element['id']} <br>
+              <b>Owner Name:</b>     ${element['owner']}<br>
+              <b>Model:</b>     ${element['car_name']}      <br>
+              <b>Location:</b>  [${parseFloat(element['locx']).toFixed(6)}, ${parseFloat(element['locy']).toFixed(6)}] <br>
+              <b>Speed:</b>     ${element['speed']} km/hr     <br>
+              <b>Broke Rule:</b> ${element['broke_reason']}<br>
+              <b> Past Rule breaks:</b> ${element['past_breaks']}
+          `;
+          div.getElementsByClassName("unmark")[0].addEventListener("click", () => {
+            console.log(element['id'])
+            fetch("http://localhost:3000/api/unmark_car", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({"car_id": element['id']})
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+          })
+          return div; 
         }
-    </script>
 
-    
+  
+        function addCarPopup(element){
+            var car_icon = blueMarkerIcon
+            if(element['broke_rule']){
+              car_icon = redMarkerIcon;
+            }
+            markerList[element['id']] = L.marker([
+                                        parseFloat(element['locy']),
+                                        parseFloat(element['locx'])]
+                                        ,{icon: car_icon })
+                                        .bindPopup(carContent(element))
+                                        .addTo(mymap)
+        }
 
-   <script type="text/javascript">
-    var map = new ol.Map({
-      target: 'map',
-      layers: [
-        new ol.layer.Tile({
-          source: new ol.source.OSM()
-        })
-      ],
-      view: new ol.View({
-        center: ol.proj.fromLonLat([72.8777, 19.0760]),
-        zoom: 15
-      })
-    });
-    var layer = new ol.layer.Vector({
-        source: new ol.source.Vector({
-            features: [
-                new ol.Feature({
-                    geometry: new ol.geom.Point(ol.proj.fromLonLat([72.8776, 19.0760]))
+        
+        fetch("http://localhost:3000/api/all_cars", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                addCarPopup(element)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
+
+      //============= END ========================
+
+
+      //======== UPDATE LOOP ================================
+
+      function updateCarPopup(element){
+        var car_icon = blueMarkerIcon
+        if(element['broke_rule']){
+          car_icon = redMarkerIcon;
+        }
+        markerList[element['id']].setLatLng([
+                                          parseFloat(element['locy']),
+                                          parseFloat(element['locx'])
+                                        ])
+        markerList[element['id']].setIcon(car_icon)
+        markerList[element['id']].getPopup()
+                    .setContent(carContent(element))
+      }
+        
+        async function updateCars(){
+            fetch("http://localhost:3000/api/all_cars", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+            }).then(function(res){
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  
+                  if(markerList[element['id']]){
+                    updateCarPopup(element)
+                  }
+                  else{
+                    addCarPopup(element)
+                  }
+                  
                 })
-            ]
-        })
-    });
-    map.addLayer(layer);
+              })
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
+        setInterval(updateCars, 1000);
 
-    var container = document.getElementById('popup');
- var content = document.getElementById('popup-content');
- var closer = document.getElementById('popup-closer');
+      //=============== END UPDATE ===================
 
- var overlay = new ol.Overlay({
-     element: container,
-     autoPan: true,
-     autoPanAnimation: {
-         duration: 250
-     }
- });
- map.addOverlay(overlay);
+      //=============== ADD TRAFFIC SIGNAL and PETROL PUMP
+      var b;
+      let traffic_list = {};
+        fetch("http://localhost:3000/api/tsig", {
+          method: 'post',
+          headers: {'Content-Type': 'application/json'},
+        }).then(res => {
+            res.json().then(data => {
+              data.rows.forEach(element => {
+                var t_loc = element['loc']
+                t_loc = t_loc.substr(6, t_loc.length-7).split(" ");
+                var t_icon = NaN
+                if(element['signal']=='R'){
+                  t_icon = redIcon
+                }
+                else if(element['signal']=='G'){
+                  t_icon = greenIcon
+                }
+                else{
+                  t_icon = yellowIcon
+                }
+                traffic_list[element['id']] = L.marker([
+                                        parseFloat(t_loc[0]),
+                                        parseFloat(t_loc[1])]
+                                        ,{icon: t_icon}
+                                        )
+                                    .bindPopup(`ID: ${element['id']} <br>Signal: ${element['signal']}`)
+                                    .addTo(mymap)
+              });
+            });
+          })
+          .catch(error => {
+              console.error('Fetch Error:', error)
+          })
 
- closer.onclick = function() {
-     overlay.setPosition(undefined);
-     closer.blur();
-     return false;
- };
+      //=============== END 
 
- map.on('singleclick', function (event) {
-     if (map.hasFeatureAtPixel(event.pixel) === true) {
-         var coordinate = event.coordinate;
+      //=============== UPDATE TRAFFIC SIGNAL and PETROL PUMP
+      async function updateTraffic(){
+            fetch("http://localhost:3000/api/tsig", {
+                method: 'post',
+                headers: {'Content-Type': 'application/json'},
+            }).then(res => {
+              res.json().then(data => {
+                data.rows.forEach(element => {
+                  var t_icon = NaN
+                  if(element['signal']=='R'){
+                    t_icon = redIcon
+                  }
+                  else if(element['signal']=='G'){
+                    t_icon = greenIcon
+                  }
+                  else{
+                    t_icon = yellowIcon
+                  }
+                  traffic_list[element['id']].getPopup().setContent(
+                    `ID: ${element['id']} <br>Signal: ${element['signal']}`
+                  )
+                  traffic_list[element['id']].setIcon(t_icon)
+                });
+              });
+            })
+            .catch(function(error ){
+                console.error('Fetch Error:', error)
+            })
+        }
 
-         content.innerHTML = '<b>Car ID :</b> 01<br /><b>Speed: </b>34.5kmph';
-         overlay.setPosition(coordinate);
-     } else {
-         overlay.setPosition(undefined);
-         closer.blur();
-     }
- });
-  </script>
+        setInterval(updateTraffic, 1000);
+      //=============== END
 
+    </script>
 </main>
 <%- include('../includes/end.ejs') %>
+ 
