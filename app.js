@@ -167,12 +167,12 @@ app.post('/api/road_data', (req, res, next) => {
 app.post('/api/hour_road_data', (req, res, next) => {
     pool.query("select R.id as id,\
     st_asgeojson(st_flipcoordinates(st_makeline(node_a, node_b))) as track,\
-    to_char(date_trunc('minute', start_time), 'YYYY-MM-DD  HH24:MI') as start_hour,\
+    to_char(date_trunc('hour', start_time), 'YYYY-MM-DD  HH24') as start_hour,\
     avg((st_length(\
      st_makeline(node_a, node_b)::geography)*18)/(5* extract(epoch from (end_time - start_time))\
     )) as avg_speed, avg(fuel_consumed) as avg_fuel_consumed, count(car_id) as no_of_cars\
     from roadstretch R, roadstretchdata RD where R.id = RD.stretch_id\
-    and RD.end_time is not null group by R.id, date_trunc('minute', start_time)", function(err, row){
+    and RD.end_time is not null group by R.id, date_trunc('hour', start_time)", function(err, row){
         if (err){
             throw err;
         }
