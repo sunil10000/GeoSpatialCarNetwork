@@ -9,10 +9,9 @@
    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
    crossorigin=""></script>
-
-   <script src="../dist/leaflet.polylineDecorator.js"></script>
-
-
+   
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-polylinedecorator/1.0.1/leaflet.polylineDecorator.min.js">
+  </script>
    <style>
        #myMap { height: 360px; }
 
@@ -115,12 +114,14 @@
           </div>
           `;
           div.getElementsByClassName("focus")[0].addEventListener("click", () => {
-            // L.geoJson(element['track']).addTo(mymap);
+            var sp = element['start_point'];
+            sp = sp.substr(6, sp.length-7).split(" ");
+            mymap.panTo([parseFloat(sp[0]), parseFloat(sp[1])], focusZoom);
           })
           document.getElementById('myJourneyList').appendChild(div);
         }
 
-        var a = "";
+        var a,b;
         let lineList = {};
         fetch("http://localhost:3000/api/pj", {
           method: 'post',
@@ -130,13 +131,18 @@
             res.json().then(data => {
               data.rows.forEach(element => {
                 addPj(element);
-                L.geoJson({
-                  "type": "Feature",
-                  "properties": {},
-                  "geometry": JSON.parse(element['track'])
-                }).addTo(mymap)
-                a = element['track']
-                // L.polyline(JSON.parse(element['track'])['coordinates']).addTo(mymap);
+                b = element['start_point']
+                var pl = L.polyline(JSON.parse(element['track'])['coordinates']);
+                pl.addTo(mymap);
+                L.polylineDecorator(pl, {
+                        patterns: [
+                            {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
+                              {pixelSize: 8, polygon: false, 
+                                pathOptions: {stroke: true}}
+                                )
+                            }
+                            ]
+                    }).addTo(mymap)
               });
             });
           })
@@ -152,7 +158,9 @@
           var div = document.getElementById(`pj_${element['id']}`);
           div.getElementsByClassName("pj_content")[0].innerHTML = pjContent(element)
           div.getElementsByClassName("focus")[0].addEventListener("click", () => {
-            L.geoJson(element['track']).addTo(mymap);
+            var sp = element['start_point'];
+            sp = sp.substr(6, sp.length-7).split(" ");
+            mymap.panTo([parseFloat(sp[0]), parseFloat(sp[1])], focusZoom);
           })
         }
         
@@ -165,18 +173,27 @@
             }).then(function(res){
               res.json().then(data => {
                 data.rows.forEach(element => {
-                  // console.log(element);
                   updatePj(element);
-                  L.geoJson(element['track']).addTo(mymap);
+                  var pl = L.polyline(JSON.parse(element['track'])['coordinates']);
+                  pl.addTo(mymap);
+                  L.polylineDecorator(pl, {
+                          patterns: [
+                              {offset: 0, repeat: 50, symbol: L.Symbol.arrowHead(
+                                {pixelSize: 15, polygon: false, 
+                                  pathOptions: {stroke: true}}
+                                  )
+                              }
+                              ],
+                      color: 'black', weight: '5'
+                      }).addTo(mymap)
                 });
               });
-                // mymap.panTo([row['locy'], row['locx']], 18);
             })
             .catch(function(error ){
                 console.error('Fetch Error:', error)
             })
         }
-        // setInterval(updatePjs, 1000);
+        setInterval(updatePjs, 1000);
 
       //=============== END UPDATE ===================
 

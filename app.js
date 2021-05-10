@@ -2,7 +2,6 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const hstore = require('hstore.js')
 
 const adminRo = require('./routes/admin');
 const userRo = require('./routes/user');
@@ -58,7 +57,8 @@ app.post('/api/pj', (req, res, next) => {
     pool.query("SELECT id, car_id, \
                 to_char(start_time, 'YYYY-MM-DD  HH24:MI') as start_time,\
                 to_char(end_time, 'YYYY-MM-DD  HH24:MI') as end_time,\
-                tags, st_asgeojson(track) as track FROM journey where car_id in\
+                tags, st_asgeojson(st_flipcoordinates(track)) as track,\
+                st_astext(st_startpoint(st_flipcoordinates(track))) as start_point FROM journey where car_id in\
             (select car_id from car where car_owner=$1) order by id", [req.body.owner], function(err, row){
             if (err){
                 throw err;
@@ -66,7 +66,6 @@ app.post('/api/pj', (req, res, next) => {
             else{
                 res.set("Content-Type", 'application/json');
                 res.json(row)
-                // console.log(row)
             }
     });
 
